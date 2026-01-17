@@ -13,6 +13,26 @@ class PyPIClient:
         self.session.headers.update({
             'User-Agent': 'Zombie-Package-Detector/1.0'
         })
+        
+        
+    def package_exists(self, package_name: str) -> tuple[bool, Optional[str]]:
+        """Check if a package exists on PyPI."""
+        try:
+            url = PYPI_API_URL.format(package=package_name)
+            response = self.session.get(url, timeout=self.timeout)
+            
+            if response.status_code == 404:
+                return False, "Package not found on PyPI"
+            
+            response.raise_for_status()
+            return True, None
+            
+        except requests.exceptions.Timeout:
+            return False, "PyPI API timeout"
+        except requests.exceptions.ConnectionError:
+            return False, "PyPI API connection error"
+        except requests.exceptions.RequestException as e:
+            return False, f"PyPI API error: {str(e)}"
     
     def get_github_url(self, package_name: str) -> Optional[str]:
         
@@ -20,6 +40,10 @@ class PyPIClient:
         try:
             url = PYPI_API_URL.format(package=package_name)
             response = self.session.get(url, timeout=self.timeout)
+            
+            if response.status_code == 404:
+                return None, "Package not found on PyPI"
+            
             response.raise_for_status()
             data = response.json()
             
@@ -47,23 +71,25 @@ class PyPIClient:
                 github_urls['home_page'] = home_page
             
             if not github_urls:
-                return None
+                return None, "No GitHub repository found in PyPI metadata"
             
             # First, look for priority labels
             for label, url in github_urls.items():
                 label_lower = label.lower()
                 if any(priority in label_lower for priority in PRIORITY_LABELS):
-                    return self._normalize_github_url(url)
+                    return self._normalize_github_url(url), None
             
             # If no priority label found, return the first GitHub URL
-            return self._normalize_github_url(next(iter(github_urls.values())))
+            return self._normalize_github_url(next(iter(github_urls.values()))), None
             
+        except requests.exceptions.Timeout:
+            return None, "PyPI API timeout"
+        except requests.exceptions.ConnectionError:
+            return None, "PyPI API connection error"
         except requests.exceptions.RequestException as e:
-            print(f"Error fetching PyPI data for {package_name}: {e}")
-            return None
+            return None, f"PyPI API error: {str(e)}"
         except (KeyError, ValueError) as e:
-            print(f"Error parsing PyPI data for {package_name}: {e}")
-            return None
+            return None, f"Error parsing PyPI data: {str(e)}"
     
     def _is_github_url(self, url: str) -> bool:
         """Check if URL is a GitHub repository URL."""
