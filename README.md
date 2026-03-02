@@ -90,7 +90,7 @@ python -m detector path/to/my_requirements.txt
 ![alt text](image.png)
 
 ## 📂Project Structure
-
+<pre>
 ├── detector/
 │   ├── __init__.py          # Package initialization
 │   ├── __main__.py          # CLI entry point
@@ -103,7 +103,7 @@ python -m detector path/to/my_requirements.txt
 ├── .gitignore               # Git ignore rules
 ├── requirements.txt         # Tool dependencies
 └── README.md                # Documentation
-
+<pre>
 ## 📝Edge Cases Handled
 ### The tool is designed to handle various edge cases robustly:
 
@@ -138,3 +138,4 @@ pytest
 This project is licensed under the MIT License.
 ##
 > **Note:** AI tools (LLMs) were used to accelerate boilerplate coding and implementation, allowing the author to focus on architecture, security logic, and user experience.
+
